@@ -31,7 +31,7 @@ with open('./text/text.txt') as f:
 seed = 2137
 random.seed(seed)
 num = 0
-for (dirpath, dirnames, filenames) in os.walk(path_clear):
+for (dirpath, dirnames, filenames) in os.walk(path_flow):
     for filename in filenames:
         path_img = os.path.join(dirpath, filename)
         image = Image.open(path_img)

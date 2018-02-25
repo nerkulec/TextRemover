@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Input, Conv2D, Add, Subtract
+from keras.layers import Input, Conv2D, Add, Subtract, Dropout
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from TextRemover.util import get_checkpoint, save_loss_plot, LossHistory, LogTests, CheckpointSaver
@@ -8,13 +8,13 @@ import json
 x_path = r'H:\text_remover_img\texted'
 y_path = r'H:\text_remover_img\clear'
 
-version = 'v3.2'
-comment = 'next test Subtract()'
+version = 'v3.5'
+comment = 'mid test on dropout'
 
 steps_per_epoch = 100
-epochs = 60
-num_logs = 5
-lr = 0.0001
+epochs = 400
+num_logs = 10
+lr = 0.00001
 
 
 # augment_args = dict(width_shift_range=5, height_shift_range=3,
@@ -27,23 +27,30 @@ augment_args = dict(rescale=1/255, data_format='channels_first')
 x_datagen = ImageDataGenerator(**augment_args)
 y_datagen = ImageDataGenerator(**augment_args)
 
-x_generator = x_datagen.flow_from_directory(x_path, target_size=(360, 360), batch_size=10, class_mode=None, seed=seed)
-y_generator = y_datagen.flow_from_directory(y_path, target_size=(360, 360), batch_size=10, class_mode=None, seed=seed)
+x_generator = x_datagen.flow_from_directory(x_path, target_size=(360, 360), batch_size=4, class_mode=None, seed=seed)
+y_generator = y_datagen.flow_from_directory(y_path, target_size=(360, 360), batch_size=4, class_mode=None, seed=seed)
 
 
 img = Input(shape=(3, 360, 360), name='img')
 
-x = Conv2D(64, (3, 3), padding='same', activation='relu')(img)
+x = Conv2D(48, (3, 3), padding='same', activation='relu')(img)
 x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
+x = Dropout(0.4, seed=seed)(x)
 x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
-x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
-x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
-x = Conv2D(64, (3, 3), padding='same', activation='relu')(x)
+x = Dropout(0.4, seed=seed)(x)
+x = Conv2D(96, (3, 3), padding='same', activation='relu')(x)
+x = Dropout(0.4, seed=seed)(x)
+x = Conv2D(96, (3, 3), padding='same', activation='relu')(x)
+x = Dropout(0.4, seed=seed)(x)
+x = Conv2D(96, (3, 3), padding='same', activation='relu')(x)
+x = Dropout(0.4, seed=seed)(x)
 x = Conv2D(3, (1, 1), padding='same')(x)
 added = Subtract()([img, x])
 
 model = Model(inputs=[img], outputs=[added])
 model.compile(optimizer=Adam(lr=lr), loss="binary_crossentropy")
+
+model.summary()
 
 checkpoint = get_checkpoint(version, model=model)
 
